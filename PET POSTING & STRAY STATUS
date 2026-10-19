@@ -1,0 +1,348 @@
+ # =========================
+    # PET POSTING
+    # =========================
+
+    def show_pet_posting(self, selected_category=None):
+        self.clear_content()
+        self.make_title(
+            "Pet Posting",
+            "Post a pet for adoption or report a stray animal"
+        )
+
+        form = tk.Frame(
+            self.content_frame,
+            bg=self.WHITE,
+            highlightbackground="#D4E3E3",
+            highlightthickness=1
+        )
+        form.pack(fill="x", padx=25, pady=(0, 12))
+
+        tk.Label(
+            form,
+            text="POST INFORMATION",
+            font=("Arial", 13, "bold"),
+            bg=self.WHITE,
+            fg=self.NAV_COLOR
+        ).grid(
+            row=0, column=0, columnspan=2,
+            sticky="w", padx=18, pady=(15, 10)
+        )
+
+        tk.Label(
+            form,
+            text="Post Type",
+            font=("Arial", 10, "bold"),
+            bg=self.WHITE,
+            fg=self.TEXT_COLOR
+        ).grid(
+            row=1, column=0, sticky="w", padx=18, pady=5
+        )
+
+        self.post_category = tk.StringVar(
+            value=selected_category or "Pet for Adoption"
+        )
+
+        category_menu = tk.OptionMenu(
+            form,
+            self.post_category,
+            "Pet for Adoption",
+            "Stray Status Report",
+            command=lambda value: self.update_post_fields()
+        )
+        category_menu.config(
+            font=("Arial", 10),
+            bg=self.BG_COLOR,
+            relief="flat"
+        )
+        category_menu.grid(
+            row=1, column=1, sticky="ew", padx=18, pady=5
+        )
+
+        self.post_fields_frame = tk.Frame(
+            form, bg=self.WHITE
+        )
+        self.post_fields_frame.grid(
+            row=2, column=0, columnspan=2, sticky="ew"
+        )
+
+        form.grid_columnconfigure(1, weight=1)
+
+        self.update_post_fields()
+
+        self.make_button(
+            form, "SUBMIT POST", self.post_pet, self.NAV_COLOR
+        ).grid(
+            row=3, column=0, columnspan=2,
+            sticky="ew", padx=18, pady=(12, 18)
+        )
+
+        tk.Label(
+            self.content_frame,
+            text="My Posts",
+            font=("Arial", 15, "bold"),
+            bg=self.BG_COLOR,
+            fg=self.NAV_COLOR
+        ).pack(anchor="w", padx=27, pady=(5, 5))
+
+        self.my_posts_frame = tk.Frame(
+            self.content_frame, bg=self.BG_COLOR
+        )
+        self.my_posts_frame.pack(
+            fill="both", expand=True, padx=25, pady=(0, 10)
+        )
+
+        self.display_my_posts()
+
+    def update_post_fields(self):
+        for widget in self.post_fields_frame.winfo_children():
+            widget.destroy()
+
+        self.post_entries = {}
+
+        if self.post_category.get() == "Pet for Adoption":
+            fields = [
+                ("Pet Name", "name"),
+                ("Age", "age"),
+                ("Breed", "breed"),
+                ("Pet Type", "animal_type"),
+                ("Additional Information", "info")
+            ]
+        else:
+            fields = [
+                ("Pet Name (if known)", "name"),
+                ("Age (if known)", "age"),
+                ("Pet Type", "animal_type"),
+                ("Breed (if known)", "breed"),
+                ("Location", "location"),
+                ("Additional Information", "info")
+            ]
+
+        for row, (label_text, key) in enumerate(fields):
+            tk.Label(
+                self.post_fields_frame,
+                text=label_text,
+                font=("Arial", 10, "bold"),
+                bg=self.WHITE,
+                fg=self.TEXT_COLOR
+            ).grid(
+                row=row, column=0,
+                sticky="w", padx=18, pady=5
+            )
+
+            # Pet type is now a text field the user can type into.
+            entry = tk.Entry(
+                self.post_fields_frame,
+                font=("Arial", 10),
+                relief="solid",
+                bd=1
+            )
+            entry.grid(
+                row=row, column=1,
+                sticky="ew", padx=18, pady=4, ipady=4
+            )
+
+            self.post_entries[key] = entry
+
+        self.post_fields_frame.grid_columnconfigure(1, weight=1)
+
+    def post_pet(self):
+        category = self.post_category.get()
+
+        name = self.post_entries["name"].get().strip()
+        age = self.post_entries["age"].get().strip()
+        breed = self.post_entries["breed"].get().strip()
+        animal_type = self.post_entries["animal_type"].get().strip()
+        info = self.post_entries["info"].get().strip()
+
+        if not animal_type:
+            messagebox.showwarning(
+                "Missing Pet Type",
+                "Please type the pet type, such as Dog, Cat, Rabbit, or Bird."
+            )
+            return
+
+        if category == "Pet for Adoption":
+            if not name or not age or not breed:
+                messagebox.showwarning(
+                    "Missing Information",
+                    "For adoption posts, please enter the pet name, age, and breed."
+                )
+                return
+
+            if not age.isdigit():
+                messagebox.showwarning(
+                    "Invalid Age",
+                    "Please enter the pet's age as a number in years."
+                )
+                return
+
+            pet = {
+                "name": name,
+                "age": age + " year(s)",
+                "breed": breed,
+                "animal_type": animal_type,
+                "info": info,
+                "category": "Pet for Adoption",
+                "status": "Available",
+                "posted_by": self.current_user
+            }
+
+            self.pets.append(pet)
+
+            messagebox.showinfo(
+                "Post Submitted",
+                f"{name} has been posted for adoption."
+            )
+
+        else:
+            location = self.post_entries["location"].get().strip()
+
+            if not location:
+                messagebox.showwarning(
+                    "Missing Location",
+                    "Please enter the stray animal's location."
+                )
+                return
+
+            if not name:
+                name = "Unknown Pet"
+            if not age:
+                age = "Unknown"
+            if not breed:
+                breed = "Unknown"
+
+            report = {
+                "name": name,
+                "age": age,
+                "breed": breed,
+                "type": animal_type,
+                "location": location,
+                "province": "Pangasinan",
+                "info": info,
+                "status": "Reported",
+                "reported_by": self.current_user
+            }
+
+            self.stray_reports.append(report)
+
+            messagebox.showinfo(
+                "Report Submitted",
+                f"The stray animal report has been submitted."
+            )
+
+        self.show_pet_posting(category)
+
+    def display_my_posts(self):
+        my_pets = [
+            pet for pet in self.pets
+            if pet["posted_by"] == self.current_user
+        ]
+
+        my_reports = [
+            report for report in self.stray_reports
+            if report["reported_by"] == self.current_user
+        ]
+
+        if not my_pets and not my_reports:
+            tk.Label(
+                self.my_posts_frame,
+                text="You have not posted any pets or stray reports yet.",
+                font=("Arial", 10),
+                bg=self.BG_COLOR,
+                fg=self.SUBTEXT_COLOR
+            ).pack(anchor="w", pady=5)
+            return
+
+        for pet in my_pets:
+            tk.Label(
+                self.my_posts_frame,
+                text=f"PET FOR ADOPTION: {pet['name']} | "
+                     f"Type: {pet['animal_type']} | "
+                     f"{pet['breed']} | {pet['age']} | {pet['status']}",
+                font=("Arial", 10),
+                bg=self.WHITE,
+                fg=self.TEXT_COLOR,
+                anchor="w",
+                padx=10,
+                pady=8
+            ).pack(fill="x", pady=3)
+
+        for report in my_reports:
+            tk.Label(
+                self.my_posts_frame,
+                text=f"STRAY REPORT: {report['name']} | "
+                     f"Type: {report['type']} | "
+                     f"{report['location']} | {report['status']}",
+                font=("Arial", 10),
+                bg=self.WHITE,
+                fg=self.TEXT_COLOR,
+                anchor="w",
+                padx=10,
+                pady=8
+            ).pack(fill="x", pady=3)
+
+    # =========================
+    # STRAY STATUS
+    # =========================
+
+    def show_stray_status(self):
+        self.clear_content()
+        self.make_title(
+            "Stray Status Tracking",
+            "View reported stray animals."
+        )
+
+        if not self.stray_reports:
+            tk.Label(
+                self.content_frame,
+                text="No stray reports yet.",
+                font=("Arial", 12),
+                bg=self.BG_COLOR,
+                fg=self.SUBTEXT_COLOR
+            ).pack(pady=60)
+            return
+
+        for report in reversed(self.stray_reports):
+            card = tk.Frame(
+                self.content_frame,
+                bg=self.WHITE,
+                highlightbackground="#D4E3E3",
+                highlightthickness=1
+            )
+            card.pack(fill="x", padx=25, pady=6)
+
+            tk.Label(
+                card,
+                text=report["name"],
+                font=("Arial", 14, "bold"),
+                bg=self.WHITE,
+                fg=self.NAV_COLOR
+            ).pack(anchor="w", padx=15, pady=(10, 3))
+
+            details = (
+                f"Type: {report['type']}  |  "
+                f"Breed: {report['breed']}  |  Age: {report['age']}\n"
+                f"Location: {report['location']}, Pangasinan\n"
+                f"Additional Information: {report['info'] or 'None'}\n"
+                f"Reported by: {report['reported_by']}"
+            )
+
+            tk.Label(
+                card,
+                text=details,
+                font=("Arial", 10),
+                bg=self.WHITE,
+                fg=self.TEXT_COLOR,
+                justify="left",
+                wraplength=850
+            ).pack(anchor="w", padx=15, pady=(3, 8))
+
+            tk.Label(
+                card,
+                text=f"STATUS: {report['status']}",
+                font=("Arial", 10, "bold"),
+                bg=self.LIGHT_YELLOW,
+                fg=self.YELLOW,
+                padx=8,
+                pady=4
+            ).pack(anchor="w", padx=15, pady=(0, 12))
