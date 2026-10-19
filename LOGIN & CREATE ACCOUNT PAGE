@@ -1,0 +1,301 @@
+# =========================
+    # LOGIN
+    # =========================
+
+    def show_login(self):
+        self.clear_window()
+        self.root.configure(bg=self.BG_COLOR)
+
+        outer = tk.Frame(self.root, bg=self.BG_COLOR)
+        outer.pack(expand=True, fill="both")
+
+        panel = tk.Frame(
+            outer,
+            bg=self.WHITE,
+            highlightbackground="#D4E3E3",
+            highlightthickness=1
+        )
+        panel.place(
+            relx=0.5, rely=0.5, anchor="center",
+            width=420, height=470
+        )
+
+        tk.Label(
+            panel,
+            text="PETLINK",
+            font=("Arial", 30, "bold"),
+            bg=self.WHITE,
+            fg=self.NAV_COLOR
+        ).pack(pady=(30, 3))
+
+        tk.Label(
+            panel,
+            text="AN ONLINE ADOPTION & TRACKING SYSTEM",
+            font=("Arial", 8, "bold"),
+            bg=self.WHITE,
+            fg=self.SUBTEXT_COLOR
+        ).pack(pady=(0, 20))
+
+        tk.Label(
+            panel,
+            text="Welcome back!",
+            font=("Arial", 18, "bold"),
+            bg=self.WHITE,
+            fg=self.TEXT_COLOR
+        ).pack(pady=(0, 5))
+
+        tk.Label(
+            panel,
+            text="Log in to continue to PetLink.",
+            font=("Arial", 10),
+            bg=self.WHITE,
+            fg=self.SUBTEXT_COLOR
+        ).pack(pady=(0, 20))
+
+        tk.Label(
+            panel,
+            text="Username",
+            font=("Arial", 10, "bold"),
+            bg=self.WHITE,
+            fg=self.TEXT_COLOR
+        ).pack(anchor="w", padx=45)
+
+        self.login_username = tk.Entry(
+            panel, font=("Arial", 12), relief="solid", bd=1
+        )
+        self.login_username.pack(
+            fill="x", padx=45, ipady=7, pady=(5, 12)
+        )
+
+        tk.Label(
+            panel,
+            text="Password",
+            font=("Arial", 10, "bold"),
+            bg=self.WHITE,
+            fg=self.TEXT_COLOR
+        ).pack(anchor="w", padx=45)
+
+        self.login_password = tk.Entry(
+            panel, font=("Arial", 12), show="*", relief="solid", bd=1
+        )
+        self.login_password.pack(
+            fill="x", padx=45, ipady=7, pady=(5, 15)
+        )
+
+        self.make_button(
+            panel, "LOG IN", self.login, self.NAV_COLOR
+        ).pack(fill="x", padx=45, pady=(0, 12))
+
+        tk.Button(
+            panel,
+            text="Create an Account",
+            command=self.show_register,
+            font=("Arial", 10, "bold"),
+            bg=self.WHITE,
+            fg=self.NAV_COLOR,
+            relief="flat",
+            cursor="hand2"
+        ).pack()
+
+        self.login_password.bind(
+            "<Return>", lambda event: self.login()
+        )
+        self.login_username.bind(
+            "<Return>", lambda event: self.login()
+        )
+
+    def login(self):
+        username = self.login_username.get().strip().lower()
+        password = self.login_password.get()
+
+        if not username or not password:
+            messagebox.showwarning(
+                "Missing Information",
+                "Please enter your username and password."
+            )
+            return
+
+        if username not in self.accounts:
+            messagebox.showerror(
+                "Login Failed",
+                "This account does not exist. Please create an account first."
+            )
+            return
+
+        if self.accounts[username]["password"] != password:
+            messagebox.showerror(
+                "Login Failed",
+                "Incorrect password. Please try again."
+            )
+            return
+
+        self.current_user = username
+        self.show_dashboard()
+
+    # =========================
+    # CREATE ACCOUNT
+    # =========================
+
+    def show_register(self):
+        self.clear_window()
+        self.root.configure(bg=self.BG_COLOR)
+
+        panel = tk.Frame(
+            self.root,
+            bg=self.WHITE,
+            highlightbackground="#D4E3E3",
+            highlightthickness=1
+        )
+        panel.place(
+            relx=0.5, rely=0.5, anchor="center",
+            width=450, height=570
+        )
+
+        tk.Label(
+            panel,
+            text="CREATE ACCOUNT",
+            font=("Arial", 24, "bold"),
+            bg=self.WHITE,
+            fg=self.NAV_COLOR
+        ).pack(pady=(22, 5))
+
+        tk.Label(
+            panel,
+            text="Join the PetLink community!",
+            font=("Arial", 10),
+            bg=self.WHITE,
+            fg=self.SUBTEXT_COLOR
+        ).pack(pady=(0, 15))
+
+        fields = [
+            ("First Name", "first"),
+            ("Last Name", "Last"),
+            ("Password", "password"),
+            ("Confirm Password", "confirm")
+        ]
+
+        self.register_entries = {}
+
+        for label_text, key in fields:
+            tk.Label(
+                panel,
+                text=label_text,
+                font=("Arial", 10, "bold"),
+                bg=self.WHITE,
+                fg=self.TEXT_COLOR
+            ).pack(anchor="w", padx=45)
+
+            entry = tk.Entry(
+                panel,
+                font=("Arial", 11),
+                relief="solid",
+                bd=1,
+                show="*" if key in ("password", "confirm") else ""
+            )
+            entry.pack(
+                fill="x", padx=45, ipady=5, pady=(4, 9)
+            )
+            self.register_entries[key] = entry
+
+        self.show_password_var = tk.BooleanVar(value=False)
+
+        tk.Checkbutton(
+            panel,
+            text="Show passwords",
+            variable=self.show_password_var,
+            command=self.toggle_password,
+            bg=self.WHITE,
+            fg=self.TEXT_COLOR,
+            activebackground=self.WHITE
+        ).pack(anchor="w", padx=42, pady=(0, 8))
+
+        self.make_button(
+            panel, "CREATE ACCOUNT", self.register, self.NAV_COLOR
+        ).pack(fill="x", padx=45, pady=(3, 8))
+
+        tk.Button(
+            panel,
+            text="Back to Login",
+            command=self.show_login,
+            font=("Arial", 10, "bold"),
+            bg=self.WHITE,
+            fg=self.NAV_COLOR,
+            relief="flat",
+            cursor="hand2"
+        ).pack()
+
+    def toggle_password(self):
+        show_char = "" if self.show_password_var.get() else "*"
+        self.register_entries["password"].configure(show=show_char)
+        self.register_entries["confirm"].configure(show=show_char)
+
+    def register(self):
+        first = self.register_entries["first"].get().strip()
+        Last = self.register_entries["Last"].get().strip()
+        password = self.register_entries["password"].get()
+        confirm = self.register_entries["confirm"].get()
+
+        if not first or not Last or not password or not confirm:
+            messagebox.showwarning(
+                "Missing Information", "Please complete all fields."
+            )
+            return
+
+        if not first.replace(" ", "").isalpha():
+            messagebox.showwarning(
+                "Invalid Name", "Please enter a valid first name."
+            )
+            return
+
+        if not Last.replace(" ", "").isalpha():
+            messagebox.showwarning(
+                "Invalid Name", "Please enter a valid Last name."
+            )
+            return
+
+        if password != confirm:
+            messagebox.showerror(
+                "Password Error", "The passwords do not match."
+            )
+            return
+
+        if len(password) < 4:
+            messagebox.showwarning(
+                "Password Too Short",
+                "Please use at least 4 characters for your password."
+            )
+            return
+
+        username = "".join(
+            character.lower()
+            for character in first + Last
+            if character.isalpha()
+        )
+
+        while username in self.accounts:
+            username += "a"
+
+        self.accounts[username] = {
+            "password": password,
+            "first_name": first,
+            "Last_name": Last,
+            "adopted": [],
+            "rescued": []
+        }
+
+        messagebox.showinfo(
+            "Account Created",
+            f"Your account was created successfully!\n\n"
+            f"Your username is: {username}\n\n"
+            "Please remember your username and password."
+        )
+
+        self.show_login()
+        self.login_username.insert(0, username)
+
+   
+
+        self.content_frame = tk.Frame(
+            self.root, bg=self.BG_COLOR
+        )
+        self.content_frame.pack(fill="both", expand=True)
